@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-appimage:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-registry-
+    
+    - name: Cache cargo index
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-git-
+    
+    - name: Cache target directory
+      uses: actions/cache@v4
+      with:
+        path: target
+        key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-target-
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libfuse2
+    
+    - name: Build AppImage
+      run: |
+        chmod +x scripts/build-appimage.sh
+        ./scripts/build-appimage.sh
+    
+    - name: Get version
+      id: get_version
+      run: |
+        if [ "${{ github.ref_type }}" = "tag" ]; then
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=dev-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Upload AppImage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: TLI-Tracker-AppImage
+        path: TLI-Tracker.AppImage
+        if-no-files-found: error
+    
+    - name: Create Release
+      if: github.ref_type == 'tag'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: TLI-Tracker.AppImage
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
