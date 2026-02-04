@@ -43,6 +43,7 @@ The AppImage automatically launches the web UI on http://127.0.0.1:8787/ and the
 - Double-click to run, or execute `./TLI-Tracker.AppImage` from terminal
 - No installation required - runs from any location
 - All data stored in `~/.local/share/tli-tracker/sessions.json`
+- **Note:** The AppImage is designed for the web interface. For CLI usage, use one of the alternative installation methods below.
 
 ### Alternative: Build from Source
 
