@@ -14,10 +14,12 @@ CLI tracker inspired by the TLI tracker workflow: track farming sessions, drops,
 
 The easiest way to install and run tli-tracker is using the portable AppImage:
 
-**Option 1: Download pre-built AppImage** (if available from releases)
+**Option 1: Download pre-built AppImage**
 ```bash
-# Download from GitHub releases
-wget https://github.com/Nwhy/tli-tracker-Rust/releases/download/latest/TLI-Tracker.AppImage
+# Download the latest AppImage from GitHub releases
+# Visit: https://github.com/Nwhy/tli-tracker-Rust/releases
+# Or use wget to download a specific version (replace v0.1.0 with desired version):
+wget https://github.com/Nwhy/tli-tracker-Rust/releases/download/v0.1.0/TLI-Tracker.AppImage
 chmod +x TLI-Tracker.AppImage
 ./TLI-Tracker.AppImage
 ```
@@ -145,3 +147,27 @@ The overlay page is designed for OBS (Browser Source) or a desktop window rule t
 Sessions are stored at:
 
 `~/.local/share/tli-tracker/sessions.json`
+
+## Releasing
+
+This project uses GitHub Actions to automatically build and publish AppImage releases.
+
+### Creating a new release
+
+1. Update the version in `Cargo.toml` if needed
+2. Create and push a git tag:
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+3. The GitHub Actions workflow will automatically:
+   - Build the AppImage
+   - Create a GitHub release
+   - Upload the AppImage to the release
+
+The AppImage will be available at: `https://github.com/Nwhy/tli-tracker-Rust/releases`
+
+### Manual workflow trigger
+
+You can also trigger the release workflow manually from the GitHub Actions tab without creating a tag. This will build the AppImage and upload it as an artifact (but won't create a release).
+
