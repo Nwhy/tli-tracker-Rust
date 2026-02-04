@@ -86,6 +86,35 @@ Output: `TLI-Tracker.AppImage`
 
 The AppImage launches the web UI on http://127.0.0.1:8787/ and the overlay on http://127.0.0.1:8787/overlay
 
+## Screenshots
+
+Example mockups showing the overlay and web interface:
+
+![Overlay screenshot](images/overlay_screenshot.svg)
+![Web interface screenshot](images/webinterface_screenshot.svg)
+
+See [docs/screenshots.md](docs/screenshots.md) for more information about screenshots and conversion options.
+
+## Install on CachyOS
+
+Quick automated installation:
+
+```bash
+curl -O https://raw.githubusercontent.com/Nwhy/tli-tracker-Rust/main/install_cachyos.sh
+chmod +x install_cachyos.sh
+sudo ./install_cachyos.sh
+```
+
+This will install dependencies, build the project, install the binary to `/usr/local/bin/`, and create a systemd service.
+
+For nginx reverse proxy setup:
+
+```bash
+sudo ./install_cachyos.sh --nginx
+```
+
+See [docs/INSTALL_CACHYOS.md](docs/INSTALL_CACHYOS.md) for detailed installation instructions and troubleshooting.
+
 ## Data location
 
 Sessions are stored at:
