@@ -104,8 +104,9 @@ async fn main() -> anyhow::Result<()> {
                 .find(|s| s.id == target_id)
                 .ok_or_else(|| anyhow::anyhow!("Session not found"))?;
             session.drops.push(drop);
+            let session_id = session.id.clone();
             storage::save_sessions(&sessions)?;
-            println!("Drop added to session {}", session.id);
+            println!("Drop added to session {}", session_id);
         }
         Commands::EndSession { session } => {
             let mut sessions = storage::load_sessions()?;
@@ -114,12 +115,13 @@ async fn main() -> anyhow::Result<()> {
                 .iter_mut()
                 .find(|s| s.id == target_id)
                 .ok_or_else(|| anyhow::anyhow!("Session not found"))?;
+            let session_id = session.id.clone();
             if session.end_time.is_some() {
-                println!("Session already ended: {}", session.id);
+                println!("Session already ended: {}", session_id);
             } else {
                 session.end_time = Some(Utc::now());
                 storage::save_sessions(&sessions)?;
-                println!("Session ended: {}", session.id);
+                println!("Session ended: {}", session_id);
             }
         }
         Commands::List => {

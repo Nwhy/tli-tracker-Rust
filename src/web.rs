@@ -68,7 +68,7 @@ struct EndReq {
 
 async fn api_end(Json(payload): Json<EndReq>) -> Result<Json<Session>, (StatusCode, String)> {
     let mut sessions = storage::load_sessions().map_err(io_err)?;
-    let target_id = resolve_session_id(&sessions, payload.session).map_err(api_err)?;
+    let target_id = resolve_session_id(&sessions, payload.session).map_err(|e| api_err(&e.to_string()))?;
     let session = sessions
         .iter_mut()
         .find(|s| s.id == target_id)
@@ -77,8 +77,9 @@ async fn api_end(Json(payload): Json<EndReq>) -> Result<Json<Session>, (StatusCo
     if session.end_time.is_none() {
         session.end_time = Some(Utc::now());
     }
+    let result = session.clone();
     storage::save_sessions(&sessions).map_err(io_err)?;
-    Ok(Json(session.clone()))
+    Ok(Json(result))
 }
 
 #[derive(Deserialize)]
@@ -91,7 +92,7 @@ struct DropReq {
 
 async fn api_drop(Json(payload): Json<DropReq>) -> Result<Json<Session>, (StatusCode, String)> {
     let mut sessions = storage::load_sessions().map_err(io_err)?;
-    let target_id = resolve_session_id(&sessions, payload.session).map_err(api_err)?;
+    let target_id = resolve_session_id(&sessions, payload.session).map_err(|e| api_err(&e.to_string()))?;
 
     let session = sessions
         .iter_mut()
@@ -104,9 +105,10 @@ async fn api_drop(Json(payload): Json<DropReq>) -> Result<Json<Session>, (Status
         value: payload.value,
     };
     session.drops.push(drop);
+    let result = session.clone();
 
     storage::save_sessions(&sessions).map_err(io_err)?;
-    Ok(Json(session.clone()))
+    Ok(Json(result))
 }
 
 fn resolve_session_id(
