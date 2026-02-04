@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <rect width="1200" height="675" fill="#f6f8fb"/>
+  <!-- top bar -->
+  <rect x="0" y="0" width="1200" height="64" fill="#0f1724"/>
+  <text x="28" y="40" font-family="Segoe UI, Roboto, Arial" font-size="20" fill="#fff">TLI Tracker — Web Interface</text>
+
+  <!-- left navigation -->
+  <rect x="20" y="92" width="240" height="520" rx="8" fill="#ffffff" stroke="#e6eef8"/>
+  <text x="40" y="130" font-family="Arial" font-size="14" fill="#0f1724">Dashboard</text>
+  <text x="40" y="160" font-family="Arial" font-size="14" fill="#0f1724">Overlay</text>
+  <text x="40" y="190" font-family="Arial" font-size="14" fill="#0f1724">Settings</text>
+
+  <!-- main cards -->
+  <g transform="translate(280,92)">
+    <rect width="880" height="120" rx="8" fill="#fff" stroke="#e6eef8"/>
+    <text x="20" y="36" font-family="Arial" font-size="16" fill="#0f1724">Active Target</text>
+    <text x="20" y="70" font-family="Arial" font-size="14" fill="#475569">Galactic Cruiser — Last ping 12s ago</text>
+    <text x="480" y="70" font-family="Arial" font-size="14" fill="#0f1724">ETA: 00:12:34</text>
+  </g>
+
+  <g transform="translate(280,236)">
+    <rect width="400" height="220" rx="8" fill="#fff" stroke="#e6eef8"/>
+    <text x="20" y="36" font-family="Arial" font-size="16" fill="#0f1724">Overlay Preview</text>
+    <rect x="40" y="60" width="320" height="140" rx="6" fill="#0b1220"/>
+    <text x="60" y="90" font-family="Arial" font-size="12" fill="#cfe6ff">Simulated overlay preview</text>
+  </g>
+
+  <g transform="translate(700,236)">
+    <rect width="460" height="220" rx="8" fill="#fff" stroke="#e6eef8"/>
+    <text x="20" y="36" font-family="Arial" font-size="16" fill="#0f1724">Recent Events</text>
+    <text x="20" y="70" font-family="Arial" font-size="13" fill="#475569">[12:03] Tracked target acquired</text>
+    <text x="20" y="92" font-family="Arial" font-size="13" fill="#475569">[12:01] Overlay connected</text>
+    <text x="20" y="114" font-family="Arial" font-size="13" fill="#475569">[11:58] Config saved</text>
+  </g>
+
+  <text x="28" y="640" font-family="Arial" font-size="12" fill="#94a3b8">Example web UI mockup — replace with real screenshots exported from the web interface</text>
+</svg>

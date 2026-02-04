@@ -91,3 +91,15 @@ The AppImage launches the web UI on http://127.0.0.1:8787/ and the overlay on ht
 Sessions are stored at:
 
 `~/.local/share/tli-tracker/sessions.json`
+
+## Screenshots
+
+### Overlay
+
+![Overlay screenshot](images/overlay_screenshot.svg)
+
+### Web Interface
+
+![Web interface screenshot](images/webinterface_screenshot.svg)
+
+See [docs/screenshots.md](docs/screenshots.md) for more information on screenshots and conversion to PNG.
