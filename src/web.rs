@@ -138,10 +138,10 @@ fn api_err(message: &str) -> (StatusCode, String) {
 }
 
 const INDEX_HTML: &str = r#"<!doctype html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-  <meta charset=\"utf-8\" />
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TLI Tracker</title>
   <style>
     :root {
@@ -204,63 +204,63 @@ const INDEX_HTML: &str = r#"<!doctype html>
 <body>
   <header>
     <h1>TLI Tracker</h1>
-    <div class=\"badge\">CachyOS • Local UI</div>
+    <div class="badge">CachyOS • Local UI</div>
   </header>
 
   <main>
-    <section class=\"panel grid\">
+    <section class="panel grid">
       <h3>Control</h3>
-      <div class=\"panel\" style=\"padding:12px;\">
-        <div class=\"row\">
+      <div class="panel" style="padding:12px;">
+        <div class="row">
           <div>
-            <label>Map</label><input id=\"map\" placeholder=\"Map name\" />
+            <label>Map</label><input id="map" placeholder="Map name" />
           </div>
           <div>
-            <label>Notes</label><input id=\"notes\" placeholder=\"Optional notes\" />
+            <label>Notes</label><input id="notes" placeholder="Optional notes" />
           </div>
         </div>
-        <button onclick=\"startSession()\">Start Session</button>
+        <button onclick="startSession()">Start Session</button>
       </div>
 
-      <div class=\"panel\" style=\"padding:12px;\">
-        <div class=\"row\">
+      <div class="panel" style="padding:12px;">
+        <div class="row">
           <div>
-            <label>Drop Name</label><input id=\"drop-name\" placeholder=\"Item name\" />
+            <label>Drop Name</label><input id="drop-name" placeholder="Item name" />
           </div>
           <div>
-            <label>Value</label><input id=\"drop-value\" type=\"number\" step=\"0.01\" value=\"0\" />
-          </div>
-        </div>
-        <div class=\"row\">
-          <div>
-            <label>Quantity</label><input id=\"drop-qty\" type=\"number\" value=\"1\" />
-          </div>
-          <div>
-            <label>Session ID (optional)</label><input id=\"drop-session\" placeholder=\"Active by default\" />
+            <label>Value</label><input id="drop-value" type="number" step="0.01" value="0" />
           </div>
         </div>
-        <button onclick=\"addDrop()\">Add Drop</button>
-        <button class=\"btn-danger\" onclick=\"endSession()\">End Active Session</button>
+        <div class="row">
+          <div>
+            <label>Quantity</label><input id="drop-qty" type="number" value="1" />
+          </div>
+          <div>
+            <label>Session ID (optional)</label><input id="drop-session" placeholder="Active by default" />
+          </div>
+        </div>
+        <button onclick="addDrop()">Add Drop</button>
+        <button class="btn-danger" onclick="endSession()">End Active Session</button>
       </div>
     </section>
 
-    <section class=\"panel\">
+    <section class="panel">
       <h3>Overview</h3>
-      <div class=\"stats\">
-        <div class=\"stat\"><div class=\"label\">Active Map</div><div class=\"value\" id=\"stat-map\">-</div></div>
-        <div class=\"stat\"><div class=\"label\">Drops</div><div class=\"value\" id=\"stat-drops\">0</div></div>
-        <div class=\"stat\"><div class=\"label\">Total Value</div><div class=\"value\" id=\"stat-total\">0</div></div>
-        <div class=\"stat\"><div class=\"label\">Profit / Min</div><div class=\"value\" id=\"stat-ppm\">0</div></div>
+      <div class="stats">
+        <div class="stat"><div class="label">Active Map</div><div class="value" id="stat-map">-</div></div>
+        <div class="stat"><div class="label">Drops</div><div class="value" id="stat-drops">0</div></div>
+        <div class="stat"><div class="label">Total Value</div><div class="value" id="stat-total">0</div></div>
+        <div class="stat"><div class="label">Profit / Min</div><div class="value" id="stat-ppm">0</div></div>
       </div>
 
-      <div style=\"height:12px\"></div>
+      <div style="height:12px"></div>
 
-      <div class=\"panel\" style=\"padding:12px;\">
-        <div class=\"session-title\" style=\"margin-bottom:10px;\">
+      <div class="panel" style="padding:12px;">
+        <div class="session-title" style="margin-bottom:10px;">
           <strong>Sessions</strong>
-          <span class=\"muted\">auto-refresh</span>
+          <span class="muted">auto-refresh</span>
         </div>
-        <div id=\"session-list\" class=\"session-list\">Loading...</div>
+        <div id="session-list" class="session-list">Loading...</div>
       </div>
     </section>
   </main>
@@ -345,10 +345,10 @@ setInterval(refreshSessions, 3000);
 "#;
 
 const OVERLAY_HTML: &str = r#"<!doctype html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-  <meta charset=\"utf-8\" />
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TLI Overlay</title>
   <style>
     :root {
@@ -376,12 +376,12 @@ const OVERLAY_HTML: &str = r#"<!doctype html>
   </style>
 </head>
 <body>
-  <div class=\"overlay\">
-    <div class=\"row\">
-      <div class=\"tile\"><div class=\"title\">Map</div><div class=\"value\" id=\"map\">-</div></div>
-      <div class=\"tile\"><div class=\"title\">Drops</div><div class=\"value\" id=\"drops\">0</div></div>
-      <div class=\"tile\"><div class=\"title\">Total</div><div class=\"value accent\" id=\"total\">0</div></div>
-      <div class=\"tile\"><div class=\"title\">Status</div><div class=\"value\" id=\"status\">idle</div></div>
+  <div class="overlay">
+    <div class="row">
+      <div class="tile"><div class="title">Map</div><div class="value" id="map">-</div></div>
+      <div class="tile"><div class="title">Drops</div><div class="value" id="drops">0</div></div>
+      <div class="tile"><div class="title">Total</div><div class="value accent" id="total">0</div></div>
+      <div class="tile"><div class="title">Status</div><div class="value" id="status">idle</div></div>
     </div>
   </div>
 
