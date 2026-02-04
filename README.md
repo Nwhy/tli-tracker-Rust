@@ -8,63 +8,127 @@ CLI tracker inspired by the TLI tracker workflow: track farming sessions, drops,
 - Summaries with total value and profit per minute
 - JSON export for analysis
 
-## Build (CachyOS)
+## Installation
 
+### Recommended: AppImage (CachyOS)
+
+The easiest way to install and run tli-tracker is using the portable AppImage:
+
+**Option 1: Download pre-built AppImage** (if available from releases)
 ```bash
-sudo pacman -S --needed rustup
-rustup default stable
+# Download from GitHub releases
+wget https://github.com/Nwhy/tli-tracker-Rust/releases/download/latest/TLI-Tracker.AppImage
+chmod +x TLI-Tracker.AppImage
+./TLI-Tracker.AppImage
 ```
 
+**Option 2: Build AppImage yourself**
 ```bash
+# Install build dependencies
+sudo pacman -S --needed rustup base-devel curl
+
+# Setup Rust
+rustup default stable
+
+# Build the AppImage
+chmod +x scripts/build-appimage.sh
+./scripts/build-appimage.sh
+```
+
+Output: `TLI-Tracker.AppImage`
+
+The AppImage automatically launches the web UI on http://127.0.0.1:8787/ and the overlay on http://127.0.0.1:8787/overlay
+
+**Using the AppImage:**
+- Double-click to run, or execute `./TLI-Tracker.AppImage` from terminal
+- No installation required - runs from any location
+- All data stored in `~/.local/share/tli-tracker/sessions.json`
+
+### Alternative: Build from Source
+
+```bash
+# Install Rust
+sudo pacman -S --needed rustup
+rustup default stable
+
+# Build the project
 cargo build --release
 ```
 
 Binary: `target/release/tli-tracker`
 
+### Alternative: Install with Cargo
+
+```bash
+# Install Rust
+sudo pacman -S --needed rustup
+rustup default stable
+
+# Install directly from source
+cargo install --path .
+```
+
+Binary will be installed to `~/.cargo/bin/tli-tracker`
+
 ## Usage
 
-Initialize storage:
+**Note:** If using the AppImage, the CLI commands are not directly accessible. The AppImage is designed to launch the web interface automatically. For CLI usage, build from source or use `cargo install`.
+
+Initialize storage (when using CLI):
 
 ```bash
 ./target/release/tli-tracker init
+# Or if installed via cargo:
+tli-tracker init
 ```
 
 Start a session:
 
 ```bash
 ./target/release/tli-tracker start-session --map "Netherrealm" --notes "Test run"
+# Or: tli-tracker start-session --map "Netherrealm" --notes "Test run"
 ```
 
 Add drops:
 
 ```bash
 ./target/release/tli-tracker add-drop --name "Flame Core" --quantity 2 --value 18.5
+# Or: tli-tracker add-drop --name "Flame Core" --quantity 2 --value 18.5
 ```
 
 End session:
 
 ```bash
 ./target/release/tli-tracker end-session
+# Or: tli-tracker end-session
 ```
 
 Summary:
 
 ```bash
 ./target/release/tli-tracker summary
+# Or: tli-tracker summary
 ```
 
 Export:
 
 ```bash
 ./target/release/tli-tracker export --out ./sessions.json
+# Or: tli-tracker export --out ./sessions.json
 ```
 
-## Webinterface + Overlay
+## Web Interface + Overlay
 
-Start the local web UI:
+Start the local web UI (when using binary built from source):
 
 ```bash
 ./target/release/tli-tracker serve --host 127.0.0.1 --port 8787
+```
+
+Or if installed via cargo:
+
+```bash
+tli-tracker serve --host 127.0.0.1 --port 8787
 ```
 
 Open in browser:
@@ -73,18 +137,7 @@ Open in browser:
 
 The overlay page is designed for OBS (Browser Source) or a desktop window rule to keep it on top.
 
-## AppImage (CachyOS)
-
-Build a portable AppImage (x86_64):
-
-```bash
-chmod +x scripts/build-appimage.sh
-./scripts/build-appimage.sh
-```
-
-Output: `TLI-Tracker.AppImage`
-
-The AppImage launches the web UI on http://127.0.0.1:8787/ and the overlay on http://127.0.0.1:8787/overlay
+**Note:** The AppImage automatically starts the web server when launched.
 
 ## Data location
 
