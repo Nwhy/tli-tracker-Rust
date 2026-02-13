@@ -57,9 +57,6 @@ pub fn export_sessions<P: AsRef<Path>>(sessions: &[Session], path: P) -> io::Res
     Ok(())
 }
 
-/// Torchlight Infinite Steam AppID
-const TLI_APP_ID: &str = "1974050";
-
 /// Relative path from a Steam library root to the UE_game.log file.
 const TLI_LOG_RELATIVE: &str =
     "steamapps/common/Torchlight Infinite/UE_game/TorchLight/Saved/Logs/UE_game.log";
@@ -104,42 +101,6 @@ pub fn detect_game_log() -> Option<PathBuf> {
             for lib_path in paths {
                 let candidate = lib_path.join(TLI_LOG_RELATIVE);
                 if candidate.is_file() {
-                    return Some(candidate);
-                }
-            }
-        }
-    }
-
-    None
-}
-
-/// Detect the Torchlight Infinite game data directory (Proton prefix).
-///
-/// On Linux with Steam Proton the user data lives under
-/// `<steam-library>/steamapps/compatdata/1974050/pfx/drive_c/users/steamuser/AppData/LocalLow/XD Entertainment/TorchLight Infinite`.
-pub fn detect_game_path() -> Option<PathBuf> {
-    let roots = steam_roots()?;
-
-    for root in &roots {
-        let candidate = root
-            .join("steamapps/compatdata")
-            .join(TLI_APP_ID)
-            .join("pfx/drive_c/users/steamuser/AppData/LocalLow/XD Entertainment/TorchLight Infinite");
-        if candidate.is_dir() {
-            return Some(candidate);
-        }
-    }
-
-    // Also search libraryfolders.vdf-referenced libraries
-    for root in &roots {
-        let library_file = root.join("steamapps/libraryfolders.vdf");
-        if let Some(paths) = parse_library_folders(&library_file) {
-            for lib_path in paths {
-                let candidate = lib_path
-                    .join("steamapps/compatdata")
-                    .join(TLI_APP_ID)
-                    .join("pfx/drive_c/users/steamuser/AppData/LocalLow/XD Entertainment/TorchLight Infinite");
-                if candidate.is_dir() {
                     return Some(candidate);
                 }
             }

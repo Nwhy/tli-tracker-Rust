@@ -2,7 +2,6 @@ mod gui;
 mod log_parser;
 mod models;
 mod storage;
-mod web;
 
 use chrono::Utc;
 use clap::{Parser, Subcommand};
@@ -56,19 +55,11 @@ enum Commands {
         #[arg(long)]
         out: String,
     },
-    /// Run local web UI and overlay
-    Serve {
-        #[arg(long, default_value = "127.0.0.1")]
-        host: String,
-        #[arg(long, default_value_t = 8787)]
-        port: u16,
-    },
     /// Launch standalone GUI application
     Gui,
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
@@ -171,10 +162,6 @@ async fn main() -> anyhow::Result<()> {
             let sessions = storage::load_sessions()?;
             storage::export_sessions(&sessions, out)?;
             println!("Exported sessions.");
-        }
-        Commands::Serve { host, port } => {
-            let addr = format!("{}:{}", host, port);
-            web::serve(addr).await?;
         }
         Commands::Gui => {
             gui::run()?;

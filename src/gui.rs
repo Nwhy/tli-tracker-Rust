@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 use chrono::{DateTime, Local, Utc};
 use eframe::egui;
 
-use crate::log_parser::{self, ItemDelta, LogEvent, LootSummary};
+use crate::log_parser::{self, ItemDelta, LogEvent, LootSummary, FLAME_ELEMENTIUM_ID};
 use crate::storage;
 
 /// Interval between log re-parses.
@@ -61,12 +61,21 @@ impl TrackerSession {
         self.cumulative_loot.values().sum()
     }
 
-    fn items_per_hour(&self) -> f64 {
+    /// Total Flame Elementium gained during this session.
+    fn flame_elementium(&self) -> i64 {
+        self.cumulative_loot
+            .get(FLAME_ELEMENTIUM_ID)
+            .copied()
+            .unwrap_or(0)
+    }
+
+    /// Flame Elementium gained per hour during this session.
+    fn flame_elementium_per_hour(&self) -> f64 {
         let secs = self.elapsed_secs();
         if secs < 1.0 {
             return 0.0;
         }
-        self.total_items() as f64 / secs * 3600.0
+        self.flame_elementium() as f64 / secs * 3600.0
     }
 }
 
@@ -101,7 +110,8 @@ pub struct TrackerApp {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Tab {
-    Loot,
+    FlameElementium,
+    Items,
     Inventory,
     Runs,
 }
@@ -124,7 +134,7 @@ impl TrackerApp {
             current_map: None,
             session: None,
             prev_loot: HashMap::new(),
-            active_tab: Tab::Loot,
+            active_tab: Tab::FlameElementium,
             _watcher: None,
             watch_rx: None,
         };
@@ -349,7 +359,8 @@ impl eframe::App for TrackerApp {
             // Tabs
             ui.horizontal(|ui| {
                 let tabs = [
-                    (Tab::Loot, "Loot"),
+                    (Tab::FlameElementium, "Flame Elementium"),
+                    (Tab::Items, "Items"),
                     (Tab::Inventory, "Inventory"),
                     (Tab::Runs, "Runs"),
                 ];
@@ -375,7 +386,8 @@ impl eframe::App for TrackerApp {
             ui.add_space(6.0);
 
             match self.active_tab {
-                Tab::Loot => self.draw_loot_tab(ui),
+                Tab::FlameElementium => self.draw_fe_tab(ui),
+                Tab::Items => self.draw_loot_tab(ui),
                 Tab::Inventory => self.draw_inventory_tab(ui),
                 Tab::Runs => self.draw_runs_tab(ui),
             }
@@ -426,18 +438,22 @@ impl TrackerApp {
                 let time_str = format!("{:02}:{:02}", mins, secs);
                 self.draw_stat(ui, "TIME", &time_str);
 
+                let fe = session.flame_elementium();
+                self.draw_stat(ui, "FE", &fe.to_string());
+
+                let fe_per_hour = session.flame_elementium_per_hour();
+                self.draw_stat(ui, "FE/HR", &format!("{:.0}", fe_per_hour));
+
                 let total = session.total_items();
                 self.draw_stat(ui, "ITEMS", &total.to_string());
-
-                let per_hour = session.items_per_hour();
-                self.draw_stat(ui, "ITEMS/HR", &format!("{:.0}", per_hour));
 
                 let runs = session.runs.len();
                 self.draw_stat(ui, "RUNS", &runs.to_string());
             } else {
                 self.draw_stat(ui, "TIME", "--:--");
+                self.draw_stat(ui, "FE", "-");
+                self.draw_stat(ui, "FE/HR", "-");
                 self.draw_stat(ui, "ITEMS", "-");
-                self.draw_stat(ui, "ITEMS/HR", "-");
                 self.draw_stat(ui, "RUNS", "-");
             }
         });
@@ -465,6 +481,87 @@ impl TrackerApp {
                 });
             });
         ui.add_space(4.0);
+    }
+
+    fn draw_fe_tab(&self, ui: &mut egui::Ui) {
+        if let Some(ref session) = self.session {
+            let fe = session.flame_elementium();
+            let fe_hr = session.flame_elementium_per_hour();
+            let elapsed = session.elapsed_secs();
+            let mins = (elapsed / 60.0).floor() as u64;
+            let secs = (elapsed % 60.0).floor() as u64;
+
+            ui.add_space(8.0);
+
+            // Large FE display
+            ui.vertical_centered(|ui| {
+                ui.label(
+                    egui::RichText::new("🔥 FLAME ELEMENTIUM")
+                        .size(18.0)
+                        .color(egui::Color32::WHITE)
+                        .strong(),
+                );
+                ui.add_space(8.0);
+                ui.label(
+                    egui::RichText::new(format!("{}", fe))
+                        .size(48.0)
+                        .color(egui::Color32::WHITE)
+                        .strong(),
+                );
+                ui.add_space(4.0);
+                ui.label(
+                    egui::RichText::new(format!("{:.0} FE / hour", fe_hr))
+                        .size(20.0)
+                        .color(egui::Color32::from_gray(180)),
+                );
+                ui.add_space(12.0);
+                ui.label(
+                    egui::RichText::new(format!(
+                        "Session time: {:02}:{:02}  •  Total items: {}",
+                        mins,
+                        secs,
+                        session.total_items()
+                    ))
+                    .size(13.0)
+                    .color(egui::Color32::from_gray(120)),
+                );
+            });
+        } else {
+            // No session – show FE from log if available
+            if let Some(ref loot) = self.loot {
+                let fe_delta = loot.flame_elementium_delta();
+                ui.add_space(8.0);
+                ui.vertical_centered(|ui| {
+                    ui.label(
+                        egui::RichText::new("🔥 FLAME ELEMENTIUM")
+                            .size(18.0)
+                            .color(egui::Color32::WHITE)
+                            .strong(),
+                    );
+                    ui.add_space(8.0);
+                    ui.label(
+                        egui::RichText::new(format!("{}", fe_delta))
+                            .size(48.0)
+                            .color(egui::Color32::WHITE)
+                            .strong(),
+                    );
+                    ui.add_space(4.0);
+                    ui.label(
+                        egui::RichText::new("from log (start a session to track FE/hour)")
+                            .size(13.0)
+                            .color(egui::Color32::from_gray(100)),
+                    );
+                });
+            } else {
+                ui.label(
+                    egui::RichText::new(
+                        "Start a session to track Flame Elementium. Sort inventory in-game to sync baseline.",
+                    )
+                    .size(13.0)
+                    .color(egui::Color32::from_gray(100)),
+                );
+            }
+        }
     }
 
     fn draw_loot_tab(&self, ui: &mut egui::Ui) {
@@ -786,12 +883,13 @@ impl TrackerApp {
             let secs = (elapsed % 60.0).floor() as u64;
             ui.label(
                 egui::RichText::new(format!(
-                    "Started: {}  |  Duration: {}:{:02}  |  Total items: {}  |  Items/hr: {:.0}",
+                    "Started: {}  |  Duration: {}:{:02}  |  FE: {}  |  FE/hr: {:.0}  |  Total items: {}",
                     session.start_wall.with_timezone(&Local).format("%H:%M:%S"),
                     mins,
                     secs,
-                    session.total_items(),
-                    session.items_per_hour()
+                    session.flame_elementium(),
+                    session.flame_elementium_per_hour(),
+                    session.total_items()
                 ))
                 .size(12.0)
                 .color(egui::Color32::from_gray(140)),

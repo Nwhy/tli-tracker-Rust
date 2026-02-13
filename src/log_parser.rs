@@ -5,6 +5,9 @@ use std::path::Path;
 
 use serde::Serialize;
 
+/// ConfigBaseId for Flame Elementium – the primary tracked resource.
+pub const FLAME_ELEMENTIUM_ID: &str = "100300";
+
 /// Embedded item database: ConfigBaseId → English name.
 /// Generated from TITrack's tlidb_items_seed_en.json.
 static ITEMS_JSON: &str = include_str!("items.json");
@@ -78,6 +81,17 @@ pub struct ItemDelta {
 pub struct LootSummary {
     pub items: Vec<ItemDelta>,
     pub total_events: usize,
+}
+
+impl LootSummary {
+    /// Return the net Flame Elementium delta from this summary.
+    pub fn flame_elementium_delta(&self) -> i64 {
+        self.items
+            .iter()
+            .filter(|i| i.config_base_id == FLAME_ELEMENTIUM_ID)
+            .map(|i| i.delta)
+            .sum()
+    }
 }
 
 // ── Inventory pages we care about ─────────────────────────────────────
@@ -459,5 +473,47 @@ mod tests {
     fn test_excluded_page() {
         let line = "GameLog: Display: [Game] BagMgr@:Modfy BagItem PageId = 100 SlotId = 0 ConfigBaseId = 100300 Num = 1";
         assert!(parse_line(line).is_none());
+    }
+
+    #[test]
+    fn test_flame_elementium_id_constant() {
+        assert_eq!(FLAME_ELEMENTIUM_ID, "100300");
+        assert_eq!(item_name(FLAME_ELEMENTIUM_ID), "Flame Elementium");
+    }
+
+    #[test]
+    fn test_loot_summary_flame_elementium_delta() {
+        let summary = LootSummary {
+            items: vec![
+                ItemDelta {
+                    config_base_id: FLAME_ELEMENTIUM_ID.to_string(),
+                    item_name: "Flame Elementium".to_string(),
+                    delta: 150,
+                    current: 500,
+                },
+                ItemDelta {
+                    config_base_id: "200100".to_string(),
+                    item_name: "Some Other Item".to_string(),
+                    delta: 20,
+                    current: 30,
+                },
+            ],
+            total_events: 5,
+        };
+        assert_eq!(summary.flame_elementium_delta(), 150);
+    }
+
+    #[test]
+    fn test_loot_summary_flame_elementium_delta_none() {
+        let summary = LootSummary {
+            items: vec![ItemDelta {
+                config_base_id: "200100".to_string(),
+                item_name: "Some Other Item".to_string(),
+                delta: 20,
+                current: 30,
+            }],
+            total_events: 1,
+        };
+        assert_eq!(summary.flame_elementium_delta(), 0);
     }
 }
