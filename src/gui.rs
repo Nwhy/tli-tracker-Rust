@@ -412,12 +412,12 @@ impl TrackerApp {
             ui.add_space(16.0);
 
             // Stats boxes
-            let map_name = self
+            let map_display = self
                 .current_map
                 .as_deref()
                 .unwrap_or("-");
 
-            self.draw_stat(ui, "MAP", map_name);
+            self.draw_stat(ui, "MAP", map_display);
 
             if let Some(ref session) = self.session {
                 let elapsed = session.elapsed_secs();
