@@ -10,7 +10,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::models::{DropItem, Session};
-use crate::storage;
+use crate::{log_parser, storage};
 
 pub async fn serve(addr: String) -> anyhow::Result<()> {
     let app = Router::new()
@@ -19,7 +19,10 @@ pub async fn serve(addr: String) -> anyhow::Result<()> {
         .route("/api/sessions", get(api_sessions))
         .route("/api/start", post(api_start))
         .route("/api/end", post(api_end))
-        .route("/api/drop", post(api_drop));
+        .route("/api/drop", post(api_drop))
+        .route("/api/game-path", get(api_game_path))
+        .route("/api/loot", get(api_loot))
+        .route("/api/inventory", get(api_inventory));
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     println!("Web UI running on http://{}", addr);
@@ -137,6 +140,30 @@ fn api_err(message: &str) -> (StatusCode, String) {
     (StatusCode::BAD_REQUEST, message.to_string())
 }
 
+async fn api_game_path() -> Json<serde_json::Value> {
+    let game_path = storage::detect_game_path();
+    let log_path = storage::detect_game_log();
+    Json(serde_json::json!({
+        "game_path": game_path.as_ref().map(|p| p.to_string_lossy().into_owned()),
+        "log_path": log_path.as_ref().map(|p| p.to_string_lossy().into_owned()),
+        "log_found": log_path.is_some(),
+    }))
+}
+
+async fn api_loot() -> Result<Json<log_parser::LootSummary>, (StatusCode, String)> {
+    let log_path = storage::detect_game_log()
+        .ok_or_else(|| api_err("UE_game.log not found"))?;
+    let summary = log_parser::parse_loot_from_log(&log_path).map_err(io_err)?;
+    Ok(Json(summary))
+}
+
+async fn api_inventory() -> Result<Json<Vec<log_parser::BagEvent>>, (StatusCode, String)> {
+    let log_path = storage::detect_game_log()
+        .ok_or_else(|| api_err("UE_game.log not found"))?;
+    let inv = log_parser::parse_inventory_from_log(&log_path).map_err(io_err)?;
+    Ok(Json(inv))
+}
+
 const INDEX_HTML: &str = r#"<!doctype html>
 <html lang="en">
 <head>
@@ -204,7 +231,10 @@ const INDEX_HTML: &str = r#"<!doctype html>
 <body>
   <header>
     <h1>TLI Tracker</h1>
-    <div class="badge">CachyOS • Local UI</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div id="log-status" class="badge" title="Detecting UE_game.log...">⏳ Log: detecting...</div>
+      <div class="badge">CachyOS • Local UI</div>
+    </div>
   </header>
 
   <main>
@@ -261,6 +291,14 @@ const INDEX_HTML: &str = r#"<!doctype html>
           <span class="muted">auto-refresh</span>
         </div>
         <div id="session-list" class="session-list">Loading...</div>
+      </div>
+
+      <div id="loot-panel" class="panel" style="padding:12px; display:none;">
+        <div class="session-title" style="margin-bottom:10px;">
+          <strong>Game Loot (UE_game.log)</strong>
+          <span class="muted" id="loot-events">0 events</span>
+        </div>
+        <div id="loot-list" class="session-list" style="max-height:320px;">Waiting for log data...</div>
       </div>
     </section>
   </main>
@@ -339,6 +377,59 @@ async function endSession(){
 }
 refreshSessions();
 setInterval(refreshSessions, 3000);
+(async function checkGameLog(){
+  try {
+    const res = await fetch('/api/game-path');
+    const data = await res.json();
+    const el = document.getElementById('log-status');
+    if(data.log_found){
+      el.textContent = '✅ Log: found';
+      el.title = data.log_path;
+      el.style.borderColor = '#166534';
+      el.style.color = '#86efac';
+      document.getElementById('loot-panel').style.display = '';
+      refreshLoot();
+      setInterval(refreshLoot, 5000);
+    } else {
+      el.textContent = '❌ Log: not found';
+      el.title = 'UE_game.log not found. Make sure Torchlight Infinite is installed via Steam and logging is enabled in game settings.';
+      el.style.borderColor = '#991b1b';
+      el.style.color = '#fca5a5';
+    }
+  } catch(e) {
+    const el = document.getElementById('log-status');
+    el.textContent = '⚠ Log: error';
+    el.title = 'Failed to check game log path';
+  }
+})();
+async function refreshLoot(){
+  try {
+    const res = await fetch('/api/loot');
+    if(!res.ok) return;
+    const data = await res.json();
+    document.getElementById('loot-events').textContent = data.total_events + ' events';
+    const list = document.getElementById('loot-list');
+    list.innerHTML = '';
+    if(!data.items || data.items.length === 0){
+      list.textContent = 'No loot detected yet. Sort your inventory in-game to sync, then pick up items.';
+      return;
+    }
+    data.items.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'session-item';
+      const sign = item.delta > 0 ? '+' : '';
+      const color = item.delta > 0 ? '#86efac' : '#fca5a5';
+      el.innerHTML = `
+        <div class="session-title">
+          <div><strong>${item.item_name}</strong> <span class="muted">${item.config_base_id}</span></div>
+          <span style="color:${color};font-weight:600;">${sign}${item.delta}</span>
+        </div>
+        <div class="muted">Current stack: ${item.current}</div>
+      `;
+      list.appendChild(el);
+    });
+  } catch(e) { /* ignore */ }
+}
 </script>
 </body>
 </html>

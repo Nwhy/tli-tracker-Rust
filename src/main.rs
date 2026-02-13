@@ -1,3 +1,4 @@
+mod log_parser;
 mod models;
 mod storage;
 mod web;

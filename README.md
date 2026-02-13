@@ -148,6 +148,24 @@ Sessions are stored at:
 
 `~/.local/share/tli-tracker/sessions.json`
 
+## Torchlight Infinite game log (UE_game.log)
+
+The tracker automatically detects the `UE_game.log` file produced by Torchlight Infinite.
+The web UI header shows whether the log was found.
+
+**Important:** You must enable logging in-game each time you launch Torchlight Infinite
+(Settings → Other → Enable Log).
+
+### Log file location
+
+| Platform | Path |
+|---|---|
+| **Linux (Steam / Proton)** | `~/.steam/steam/steamapps/common/Torchlight Infinite/UE_game/TorchLight/Saved/Logs/UE_game.log` |
+| **Linux (Flatpak Steam)** | `~/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/Torchlight Infinite/UE_game/TorchLight/Saved/Logs/UE_game.log` |
+
+If you use a custom Steam library folder the path will be under that library instead.
+The tracker checks `libraryfolders.vdf` automatically.
+
 ## Releasing
 
 This project uses GitHub Actions to automatically build and publish AppImage releases.
