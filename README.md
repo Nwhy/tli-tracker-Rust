@@ -1,12 +1,21 @@
 # tli-tracker (CachyOS, Rust)
 
-CLI tracker inspired by the TLI tracker workflow: track farming sessions, drops, and profit per minute.
+Standalone loot tracker for Torchlight: Infinite. Parses the game's `UE_game.log` to automatically track picked-up items, session stats, and inventory — no manual input needed.
+
+Inspired by [TITrack](https://github.com/astockman99/TITrack).
 
 ## Features
-- Start/stop farming sessions
-- Log drops with quantity and value
-- Summaries with total value and profit per minute
-- JSON export for analysis
+
+- **Standalone native GUI** — black/white themed desktop application (no browser required)
+- **Automatic log parsing** — reads `UE_game.log` produced by Torchlight: Infinite via Steam/Proton
+- **Real-time loot tracking** — detects item pickups and shows deltas per item
+- **Session tracking** — start/stop sessions to measure items/hour and total loot
+- **Inventory view** — shows current bag contents parsed from the log
+- **Map detection** — identifies the current map from log events
+- **File watching** — automatically refreshes when the log file changes
+- **Web UI + OBS overlay** — optional web interface still available via `serve` command
+- **CLI commands** — full CLI for scripting and automation
+- **JSON export** for external analysis
 
 ## Installation
 
@@ -39,13 +48,13 @@ chmod +x scripts/build-appimage.sh
 
 Output: `TLI-Tracker.AppImage`
 
-The AppImage automatically launches the web UI on http://127.0.0.1:8787/ and the overlay on http://127.0.0.1:8787/overlay
+The AppImage launches the standalone GUI application when double-clicked.
 
 **Using the AppImage:**
 - Double-click to run, or execute `./TLI-Tracker.AppImage` from terminal
 - No installation required - runs from any location
 - All data stored in `~/.local/share/tli-tracker/sessions.json`
-- **Note:** The AppImage is designed for the web interface. For CLI usage, use one of the alternative installation methods below.
+- **Note:** The AppImage launches the GUI. For CLI usage or the web interface, build from source.
 
 ### Alternative: Build from Source
 
@@ -75,7 +84,21 @@ Binary will be installed to `~/.cargo/bin/tli-tracker`
 
 ## Usage
 
-**Note:** If using the AppImage, the CLI commands are not directly accessible. The AppImage is designed to launch the web interface automatically. For CLI usage, build from source or use `cargo install`.
+### GUI (Recommended)
+
+Launch the standalone GUI:
+
+```bash
+./target/release/tli-tracker gui
+# Or if installed via cargo:
+tli-tracker gui
+```
+
+The GUI automatically detects and parses `UE_game.log`. Use the **Start Session** button to begin tracking, then play the game — loot is tracked automatically.
+
+### CLI
+
+**Note:** If using the AppImage, the CLI commands are not directly accessible. The AppImage launches the GUI. For CLI usage, build from source or use `cargo install`.
 
 Initialize storage (when using CLI):
 
@@ -120,7 +143,9 @@ Export:
 # Or: tli-tracker export --out ./sessions.json
 ```
 
-## Web Interface + Overlay
+## Web Interface + Overlay (Optional)
+
+The web UI is still available as an alternative to the standalone GUI:
 
 Start the local web UI (when using binary built from source):
 
@@ -140,7 +165,7 @@ Open in browser:
 
 The overlay page is designed for OBS (Browser Source) or a desktop window rule to keep it on top.
 
-**Note:** The AppImage automatically starts the web server when launched.
+**Note:** The AppImage launches the standalone GUI instead of the web server. To use the web interface, run from source with `tli-tracker serve`.
 
 ## Data location
 

@@ -34,7 +34,7 @@ fi
 
 "$LINUXDEPLOY" --appdir "$APPDIR" --desktop-file "$APPDIR/tli-tracker.desktop" --icon-file "$APPDIR/tli-tracker.svg"
 
-# Replace the generated AppRun with a custom one that launches the web server
+# Replace the generated AppRun with a custom one that launches the GUI
 # linuxdeploy may create AppRun as a symlink; remove it first to avoid
 # overwriting the symlink target (the actual binary) instead of AppRun itself.
 rm -f "$APPDIR/AppRun"
@@ -45,7 +45,7 @@ SELF="$(readlink -f "$0")"
 HERE="${SELF%/*}"
 export PATH="$HERE/usr/bin:$PATH"
 export LD_LIBRARY_PATH="$HERE/usr/lib:${LD_LIBRARY_PATH:-}"
-exec "$HERE/usr/bin/tli-tracker" serve --host 127.0.0.1 --port 8787
+exec "$HERE/usr/bin/tli-tracker" gui
 APPRUN
 chmod +x "$APPDIR/AppRun"
 

@@ -1,3 +1,4 @@
+mod gui;
 mod log_parser;
 mod models;
 mod storage;
@@ -62,6 +63,8 @@ enum Commands {
         #[arg(long, default_value_t = 8787)]
         port: u16,
     },
+    /// Launch standalone GUI application
+    Gui,
 }
 
 #[tokio::main]
@@ -172,6 +175,9 @@ async fn main() -> anyhow::Result<()> {
         Commands::Serve { host, port } => {
             let addr = format!("{}:{}", host, port);
             web::serve(addr).await?;
+        }
+        Commands::Gui => {
+            gui::run()?;
         }
     }
 
