@@ -46,6 +46,6 @@ exec "$HERE/usr/bin/tli-tracker" serve --host 127.0.0.1 --port 8787
 APPRUN
 chmod +x "$APPDIR/AppRun"
 
-"$APPIMAGETOOL" "$APPDIR" "$ROOT_DIR/TLI-Tracker.AppImage"
+ARCH=x86_64 "$APPIMAGETOOL" "$APPDIR" "$ROOT_DIR/TLI-Tracker.AppImage"
 
 echo "Built: $ROOT_DIR/TLI-Tracker.AppImage"
