@@ -17,6 +17,21 @@ Inspired by [TITrack](https://github.com/astockman99/TITrack).
 - **CLI commands** — full CLI for scripting and automation
 - **JSON export** for external analysis
 
+## Source Code & Transparency
+
+This project is **fully open source**. All source code is available in this repository — there is no need to decompile any binary to inspect what the application does.
+
+| Module | Description |
+|---|---|
+| `src/main.rs` | CLI entry point and command routing |
+| `src/gui.rs` | Desktop GUI (egui) |
+| `src/log_parser.rs` | UE_game.log parsing logic |
+| `src/models.rs` | Data structures |
+| `src/storage.rs` | Session persistence (JSON) |
+| `src/items.json` | Item reference data |
+
+To verify that a compiled binary matches this source code, you can [build from source](#alternative-build-from-source) yourself and compare the result.
+
 ## Installation
 
 ### Recommended: AppImage (CachyOS)
