@@ -278,9 +278,9 @@ const INDEX_HTML: &str = r#"<!doctype html>
       <h3>Overview</h3>
       <div class="stats">
         <div class="stat"><div class="label">Active Map</div><div class="value" id="stat-map">-</div></div>
-        <div class="stat"><div class="label">Drops</div><div class="value" id="stat-drops">0</div></div>
-        <div class="stat"><div class="label">Total Value</div><div class="value" id="stat-total">0</div></div>
-        <div class="stat"><div class="label">Profit / Min</div><div class="value" id="stat-ppm">0</div></div>
+        <div class="stat"><div class="label">🔥 Flame Elementium</div><div class="value" id="stat-fe">0</div></div>
+        <div class="stat"><div class="label">🔥 FE / Hour</div><div class="value" id="stat-fe-hr">0</div></div>
+        <div class="stat"><div class="label">Items</div><div class="value" id="stat-drops">0</div></div>
       </div>
 
       <div style="height:12px"></div>
@@ -295,7 +295,7 @@ const INDEX_HTML: &str = r#"<!doctype html>
 
       <div id="loot-panel" class="panel" style="padding:12px; display:none;">
         <div class="session-title" style="margin-bottom:10px;">
-          <strong>Game Loot (UE_game.log)</strong>
+          <strong>Items (UE_game.log)</strong>
           <span class="muted" id="loot-events">0 events</span>
         </div>
         <div id="loot-list" class="session-list" style="max-height:320px;">Waiting for log data...</div>
@@ -304,6 +304,11 @@ const INDEX_HTML: &str = r#"<!doctype html>
   </main>
 
 <script>
+const FE_CONFIG_ID = '100300';
+let feSessionStart = null;
+let feSessionTotal = 0;
+let fePrevSnapshot = {};
+
 function totalValue(drops){
   return drops.reduce((acc, d) => acc + (d.value * d.quantity), 0);
 }
@@ -321,16 +326,10 @@ async function refreshSessions(){
   if(active){
     document.getElementById('stat-map').textContent = active.map;
     document.getElementById('stat-drops').textContent = active.drops.length;
-    const total = totalValue(active.drops);
-    document.getElementById('stat-total').textContent = total.toFixed(2);
-    const mins = minutesSince(active.start_time, new Date().toISOString());
-    const ppm = mins && mins > 0 ? total / mins : 0;
-    document.getElementById('stat-ppm').textContent = ppm.toFixed(2);
+    if(!feSessionStart) feSessionStart = active.start_time;
   } else {
     document.getElementById('stat-map').textContent = '-';
     document.getElementById('stat-drops').textContent = '0';
-    document.getElementById('stat-total').textContent = '0';
-    document.getElementById('stat-ppm').textContent = '0';
   }
 
   const list = document.getElementById('session-list');
@@ -344,13 +343,12 @@ async function refreshSessions(){
     el.className = 'session-item';
     const status = s.end_time ? 'ended' : 'active';
     const pillClass = s.end_time ? 'pill' : 'pill active';
-    const total = totalValue(s.drops).toFixed(2);
     el.innerHTML = `
       <div class="session-title">
         <div><strong>${s.map}</strong> <span class="muted">${s.id.slice(0,8)}</span></div>
         <span class="${pillClass}">${status}</span>
       </div>
-      <div class="muted">Drops: ${s.drops.length} • Total: ${total}</div>
+      <div class="muted">Drops: ${s.drops.length}</div>
     `;
     list.appendChild(el);
   });
@@ -408,10 +406,28 @@ async function refreshLoot(){
     if(!res.ok) return;
     const data = await res.json();
     document.getElementById('loot-events').textContent = data.total_events + ' events';
+
+    // Compute FE from loot data
+    let fe = 0;
+    if(data.items){
+      const feItem = data.items.find(i => i.config_base_id === FE_CONFIG_ID);
+      if(feItem) fe = feItem.delta;
+    }
+    document.getElementById('stat-fe').textContent = fe;
+
+    // Compute FE/hour based on active session start time
+    if(feSessionStart){
+      const mins = minutesSince(feSessionStart, new Date().toISOString());
+      const feHr = mins && mins > 0 ? fe / mins * 60 : 0;
+      document.getElementById('stat-fe-hr').textContent = feHr.toFixed(0);
+    } else {
+      document.getElementById('stat-fe-hr').textContent = '0';
+    }
+
     const list = document.getElementById('loot-list');
     list.innerHTML = '';
     if(!data.items || data.items.length === 0){
-      list.textContent = 'No loot detected yet. Sort your inventory in-game to sync, then pick up items.';
+      list.textContent = 'No items detected yet. Sort your inventory in-game to sync, then pick up items.';
       return;
     }
     data.items.forEach(item => {
@@ -470,31 +486,50 @@ const OVERLAY_HTML: &str = r#"<!doctype html>
   <div class="overlay">
     <div class="row">
       <div class="tile"><div class="title">Map</div><div class="value" id="map">-</div></div>
-      <div class="tile"><div class="title">Drops</div><div class="value" id="drops">0</div></div>
-      <div class="tile"><div class="title">Total</div><div class="value accent" id="total">0</div></div>
+      <div class="tile"><div class="title">🔥 FE</div><div class="value accent" id="fe">0</div></div>
+      <div class="tile"><div class="title">🔥 FE/HR</div><div class="value accent" id="fe-hr">0</div></div>
       <div class="tile"><div class="title">Status</div><div class="value" id="status">idle</div></div>
     </div>
   </div>
 
 <script>
-function totalValue(drops){
-  return drops.reduce((acc, d) => acc + (d.value * d.quantity), 0);
-}
+const FE_ID = '100300';
+let overlaySessionStart = null;
 async function refresh(){
   const res = await fetch('/api/sessions');
   const data = await res.json();
   const active = data.find(s => !s.end_time);
   if(!active){
     document.getElementById('map').textContent = '-';
-    document.getElementById('drops').textContent = '0';
-    document.getElementById('total').textContent = '0';
+    document.getElementById('fe').textContent = '0';
+    document.getElementById('fe-hr').textContent = '0';
     document.getElementById('status').textContent = 'idle';
+    overlaySessionStart = null;
     return;
   }
   document.getElementById('map').textContent = active.map;
-  document.getElementById('drops').textContent = active.drops.length;
-  document.getElementById('total').textContent = totalValue(active.drops).toFixed(2);
   document.getElementById('status').textContent = 'active';
+  if(!overlaySessionStart) overlaySessionStart = active.start_time;
+
+  // Fetch FE from loot API
+  try {
+    const lootRes = await fetch('/api/loot');
+    if(lootRes.ok){
+      const loot = await lootRes.json();
+      let fe = 0;
+      if(loot.items){
+        const feItem = loot.items.find(i => i.config_base_id === FE_ID);
+        if(feItem) fe = feItem.delta;
+      }
+      document.getElementById('fe').textContent = fe;
+      if(overlaySessionStart){
+        const start = new Date(overlaySessionStart);
+        const mins = (Date.now() - start.getTime()) / 60000;
+        const feHr = mins > 0 ? fe / mins * 60 : 0;
+        document.getElementById('fe-hr').textContent = feHr.toFixed(0);
+      }
+    }
+  } catch(e) {}
 }
 refresh();
 setInterval(refresh, 1500);
