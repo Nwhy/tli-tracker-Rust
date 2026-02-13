@@ -13,3 +13,5 @@ uuid = { version = "1.8", features = ["v4", "serde"] }
 anyhow = "1.0"
 axum = "0.7"
 tokio = { version = "1.37", features = ["rt-multi-thread", "macros"] }
+eframe = "0.31.1"
+notify = "7.0.0"
