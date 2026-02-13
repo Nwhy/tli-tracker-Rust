@@ -64,6 +64,17 @@ const TLI_APP_ID: &str = "1974050";
 const TLI_LOG_RELATIVE: &str =
     "steamapps/common/Torchlight Infinite/UE_game/TorchLight/Saved/Logs/UE_game.log";
 
+/// Return well-known Steam library root directories for the current user.
+fn steam_roots() -> Option<Vec<PathBuf>> {
+    let home = std::env::var("HOME").ok()?;
+    let home = Path::new(&home);
+    Some(vec![
+        home.join(".steam/steam"),
+        home.join(".local/share/Steam"),
+        home.join(".var/app/com.valvesoftware.Steam/data/Steam"),
+    ])
+}
+
 /// Detect the `UE_game.log` file produced by Torchlight Infinite.
 ///
 /// The game writes this log to its installation directory under
@@ -76,17 +87,10 @@ const TLI_LOG_RELATIVE: &str =
 /// Several well-known Steam library root locations are probed, and any
 /// additional libraries listed in `libraryfolders.vdf` are also searched.
 pub fn detect_game_log() -> Option<PathBuf> {
-    let home = std::env::var("HOME").ok()?;
-    let home = Path::new(&home);
-
-    let steam_roots: Vec<PathBuf> = vec![
-        home.join(".steam/steam"),
-        home.join(".local/share/Steam"),
-        home.join(".var/app/com.valvesoftware.Steam/data/Steam"),
-    ];
+    let roots = steam_roots()?;
 
     // Check default Steam roots first
-    for root in &steam_roots {
+    for root in &roots {
         let candidate = root.join(TLI_LOG_RELATIVE);
         if candidate.is_file() {
             return Some(candidate);
@@ -94,7 +98,7 @@ pub fn detect_game_log() -> Option<PathBuf> {
     }
 
     // Search additional library folders referenced in libraryfolders.vdf
-    for root in &steam_roots {
+    for root in &roots {
         let library_file = root.join("steamapps/libraryfolders.vdf");
         if let Some(paths) = parse_library_folders(&library_file) {
             for lib_path in paths {
@@ -114,16 +118,9 @@ pub fn detect_game_log() -> Option<PathBuf> {
 /// On Linux with Steam Proton the user data lives under
 /// `<steam-library>/steamapps/compatdata/1974050/pfx/drive_c/users/steamuser/AppData/LocalLow/XD Entertainment/TorchLight Infinite`.
 pub fn detect_game_path() -> Option<PathBuf> {
-    let home = std::env::var("HOME").ok()?;
-    let home = Path::new(&home);
+    let roots = steam_roots()?;
 
-    let steam_roots: Vec<PathBuf> = vec![
-        home.join(".steam/steam"),
-        home.join(".local/share/Steam"),
-        home.join(".var/app/com.valvesoftware.Steam/data/Steam"),
-    ];
-
-    for root in &steam_roots {
+    for root in &roots {
         let candidate = root
             .join("steamapps/compatdata")
             .join(TLI_APP_ID)
@@ -134,7 +131,7 @@ pub fn detect_game_path() -> Option<PathBuf> {
     }
 
     // Also search libraryfolders.vdf-referenced libraries
-    for root in &steam_roots {
+    for root in &roots {
         let library_file = root.join("steamapps/libraryfolders.vdf");
         if let Some(paths) = parse_library_folders(&library_file) {
             for lib_path in paths {
@@ -158,9 +155,15 @@ fn parse_library_folders(vdf_path: &Path) -> Option<Vec<PathBuf>> {
     let mut paths = Vec::new();
     for line in contents.lines() {
         let trimmed = line.trim();
-        if trimmed.starts_with("\"path\"") {
-            if let Some(val) = trimmed.split('"').nth(3) {
-                paths.push(PathBuf::from(val));
+        // Match lines like:  "path"		"/mnt/games/SteamLibrary"
+        // Handle varying amounts of whitespace/tabs between key and value.
+        if let Some(rest) = trimmed.strip_prefix("\"path\"") {
+            // The value is the next quoted string in the remainder of the line.
+            let rest = rest.trim();
+            if rest.starts_with('"') {
+                if let Some(end) = rest[1..].find('"') {
+                    paths.push(PathBuf::from(&rest[1..1 + end]));
+                }
             }
         }
     }
