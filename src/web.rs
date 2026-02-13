@@ -306,8 +306,6 @@ const INDEX_HTML: &str = r#"<!doctype html>
 <script>
 const FE_CONFIG_ID = '100300';
 let feSessionStart = null;
-let feSessionTotal = 0;
-let fePrevSnapshot = {};
 
 function totalValue(drops){
   return drops.reduce((acc, d) => acc + (d.value * d.quantity), 0);
