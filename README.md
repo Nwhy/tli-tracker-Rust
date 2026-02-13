@@ -8,12 +8,12 @@ Inspired by [TITrack](https://github.com/astockman99/TITrack).
 
 - **Standalone native GUI** — black/white themed desktop application (no browser required)
 - **Automatic log parsing** — reads `UE_game.log` produced by Torchlight: Infinite via Steam/Proton
+- **Flame Elementium tracking** — primary resource display with FE/hour calculation
 - **Real-time loot tracking** — detects item pickups and shows deltas per item
-- **Session tracking** — start/stop sessions to measure items/hour and total loot
+- **Session tracking** — start/stop sessions to measure FE/hour and total loot
 - **Inventory view** — shows current bag contents parsed from the log
 - **Map detection** — identifies the current map from log events
 - **File watching** — automatically refreshes when the log file changes
-- **Web UI + OBS overlay** — optional web interface still available via `serve` command
 - **CLI commands** — full CLI for scripting and automation
 - **JSON export** for external analysis
 
@@ -54,7 +54,7 @@ The AppImage launches the standalone GUI application when double-clicked.
 - Double-click to run, or execute `./TLI-Tracker.AppImage` from terminal
 - No installation required - runs from any location
 - All data stored in `~/.local/share/tli-tracker/sessions.json`
-- **Note:** The AppImage launches the GUI. For CLI usage or the web interface, build from source.
+- **Note:** The AppImage launches the GUI. For CLI usage, build from source.
 
 ### Alternative: Build from Source
 
@@ -143,30 +143,6 @@ Export:
 # Or: tli-tracker export --out ./sessions.json
 ```
 
-## Web Interface + Overlay (Optional)
-
-The web UI is still available as an alternative to the standalone GUI:
-
-Start the local web UI (when using binary built from source):
-
-```bash
-./target/release/tli-tracker serve --host 127.0.0.1 --port 8787
-```
-
-Or if installed via cargo:
-
-```bash
-tli-tracker serve --host 127.0.0.1 --port 8787
-```
-
-Open in browser:
-- Dashboard: http://127.0.0.1:8787/
-- Overlay: http://127.0.0.1:8787/overlay
-
-The overlay page is designed for OBS (Browser Source) or a desktop window rule to keep it on top.
-
-**Note:** The AppImage launches the standalone GUI instead of the web server. To use the web interface, run from source with `tli-tracker serve`.
-
 ## Data location
 
 Sessions are stored at:
@@ -176,7 +152,7 @@ Sessions are stored at:
 ## Torchlight Infinite game log (UE_game.log)
 
 The tracker automatically detects the `UE_game.log` file produced by Torchlight Infinite.
-The web UI header shows whether the log was found.
+The GUI header shows whether the log was found.
 
 **Important:** You must enable logging in-game each time you launch Torchlight Infinite
 (Settings → Other → Enable Log).
