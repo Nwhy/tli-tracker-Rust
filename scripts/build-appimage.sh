@@ -35,6 +35,9 @@ fi
 "$LINUXDEPLOY" --appdir "$APPDIR" --desktop-file "$APPDIR/tli-tracker.desktop" --icon-file "$APPDIR/tli-tracker.svg"
 
 # Replace the generated AppRun with a custom one that launches the web server
+# linuxdeploy may create AppRun as a symlink; remove it first to avoid
+# overwriting the symlink target (the actual binary) instead of AppRun itself.
+rm -f "$APPDIR/AppRun"
 cat > "$APPDIR/AppRun" <<'APPRUN'
 #!/usr/bin/env bash
 set -euo pipefail
