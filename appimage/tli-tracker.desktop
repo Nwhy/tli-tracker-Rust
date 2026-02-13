@@ -2,7 +2,7 @@
 Type=Application
 Name=TLI Tracker
 Comment=Torchlight: Infinite tracker
-Exec=tli-tracker-app
+Exec=tli-tracker
 Icon=tli-tracker
 Terminal=true
 Categories=Utility;Game;

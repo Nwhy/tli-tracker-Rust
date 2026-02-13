@@ -11,13 +11,6 @@ cargo build --release
 
 install -m 0755 "$ROOT_DIR/target/release/$BIN_NAME" "$APPDIR/usr/bin/$BIN_NAME"
 
-cat > "$APPDIR/usr/bin/tli-tracker-app" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-exec tli-tracker serve --host 127.0.0.1 --port 8787
-EOF
-chmod +x "$APPDIR/usr/bin/tli-tracker-app"
-
 install -m 0644 "$ROOT_DIR/appimage/tli-tracker.desktop" "$APPDIR/usr/share/applications/tli-tracker.desktop"
 install -m 0644 "$ROOT_DIR/appimage/tli-tracker.svg" "$APPDIR/usr/share/icons/hicolor/scalable/apps/tli-tracker.svg"
 
@@ -40,6 +33,19 @@ if [[ ! -f "$APPIMAGETOOL" ]]; then
 fi
 
 "$LINUXDEPLOY" --appdir "$APPDIR" --desktop-file "$APPDIR/tli-tracker.desktop" --icon-file "$APPDIR/tli-tracker.svg"
+
+# Replace the generated AppRun with a custom one that launches the web server
+cat > "$APPDIR/AppRun" <<'APPRUN'
+#!/usr/bin/env bash
+set -euo pipefail
+SELF="$(readlink -f "$0")"
+HERE="${SELF%/*}"
+export PATH="$HERE/usr/bin:$PATH"
+export LD_LIBRARY_PATH="$HERE/usr/lib:${LD_LIBRARY_PATH:-}"
+exec "$HERE/usr/bin/tli-tracker" serve --host 127.0.0.1 --port 8787
+APPRUN
+chmod +x "$APPDIR/AppRun"
+
 "$APPIMAGETOOL" "$APPDIR" "$ROOT_DIR/TLI-Tracker.AppImage"
 
 echo "Built: $ROOT_DIR/TLI-Tracker.AppImage"

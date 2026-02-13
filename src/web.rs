@@ -19,7 +19,8 @@ pub async fn serve(addr: String) -> anyhow::Result<()> {
         .route("/api/sessions", get(api_sessions))
         .route("/api/start", post(api_start))
         .route("/api/end", post(api_end))
-        .route("/api/drop", post(api_drop));
+        .route("/api/drop", post(api_drop))
+        .route("/api/game-path", get(api_game_path));
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     println!("Web UI running on http://{}", addr);
@@ -137,6 +138,16 @@ fn api_err(message: &str) -> (StatusCode, String) {
     (StatusCode::BAD_REQUEST, message.to_string())
 }
 
+async fn api_game_path() -> Json<serde_json::Value> {
+    let game_path = storage::detect_game_path();
+    let log_path = storage::detect_game_log();
+    Json(serde_json::json!({
+        "game_path": game_path.as_ref().map(|p| p.to_string_lossy().into_owned()),
+        "log_path": log_path.as_ref().map(|p| p.to_string_lossy().into_owned()),
+        "log_found": log_path.is_some(),
+    }))
+}
+
 const INDEX_HTML: &str = r#"<!doctype html>
 <html lang="en">
 <head>
@@ -204,7 +215,10 @@ const INDEX_HTML: &str = r#"<!doctype html>
 <body>
   <header>
     <h1>TLI Tracker</h1>
-    <div class="badge">CachyOS • Local UI</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div id="log-status" class="badge" title="Detecting UE_game.log...">⏳ Log: detecting...</div>
+      <div class="badge">CachyOS • Local UI</div>
+    </div>
   </header>
 
   <main>
@@ -339,6 +353,28 @@ async function endSession(){
 }
 refreshSessions();
 setInterval(refreshSessions, 3000);
+(async function checkGameLog(){
+  try {
+    const res = await fetch('/api/game-path');
+    const data = await res.json();
+    const el = document.getElementById('log-status');
+    if(data.log_found){
+      el.textContent = '✅ Log: found';
+      el.title = data.log_path;
+      el.style.borderColor = '#166534';
+      el.style.color = '#86efac';
+    } else {
+      el.textContent = '❌ Log: not found';
+      el.title = 'UE_game.log not found. Make sure Torchlight Infinite is installed via Steam and logging is enabled in game settings.';
+      el.style.borderColor = '#991b1b';
+      el.style.color = '#fca5a5';
+    }
+  } catch(e) {
+    const el = document.getElementById('log-status');
+    el.textContent = '⚠ Log: error';
+    el.title = 'Failed to check game log path';
+  }
+})();
 </script>
 </body>
 </html>
